@@ -35,36 +35,46 @@ const downElem = (e) => {
   elemStartY = e.pageY
   mainElem = e.target
 
-  if (!selected.find(item => item.elem === mainElem)) {   // если перетаскивается один элемент
-    const elem = elems.find(item => item.elem === mainElem)
-    elems.map(item => item.selected = false)
-    elem.selected = true
-    selected = [elem]
+  const elem = elems.find(item => item.elem === mainElem)
+  const elemSelected = elem.selected    // начальное состояние
 
-    elems.forEach((item) => {
-      if (item.selected) {
-        item.elem.classList.add('selected')
-        return
-      }
-
-      item.elem.classList.remove('selected')
-    })
+  if (e.ctrlKey) {
+    elem.selected = !elem.selected
   }
 
-  let count = 0
+  if (!e.ctrlKey && !elemSelected) {
+    elems.map(item => item.selected = false)
+    elem.selected = true
+    selected = [...selected, elem]
+  }
+
+  selected = elems.filter(item => item.selected)
+
+  elems.forEach((item) => {
+    if (item.selected) {
+      item.elem.classList.add('selected')
+      return
+    }
+
+    item.elem.classList.remove('selected')
+  })
+
+  // let count = 0
   selected.forEach((item) => {
     const elem = item.elem
 
-    let coordX = (e.pageX - elemStartX) + (mainElem.offsetLeft - elem.offsetLeft) + (count * 10)
-    let coordY = (e.pageY - elemStartY) + (mainElem.offsetTop - elem.offsetTop) + (count * 10)
+  //   let coordX = (e.pageX - elemStartX) + (mainElem.offsetLeft - elem.offsetLeft) + (count * 10)
+  //   let coordY = (e.pageY - elemStartY) + (mainElem.offsetTop - elem.offsetTop) + (count * 10)
     elem.style.transition = TRANSITION_START
-    elem.style.transform = 'translateX(' + coordX + 'px)'
-    elem.style.transform += 'translateY(' + coordY + 'px)'
+  //   elem.style.transform = 'translateX(' + coordX + 'px)'
+  //   elem.style.transform += 'translateY(' + coordY + 'px)'
 
-    count++
+  //   count++
   })
 
-  dragElem = true
+  if (!e.ctrlKey) {
+    dragElem = true
+  }
 }
 
 for (let i = 0; i < 50; i++) {
@@ -172,9 +182,11 @@ let moveListener = (e) => {
 
       const intersect = intersects(rect1, rect2)
 
-      if (e.ctrlKey && intersect && !item.changes) {
-        item.selected = !item.selected
-        item.changes = true
+      if (e.ctrlKey) {
+        if (intersect && !item.changes) {
+          item.selected = !item.selected
+          item.changes = true
+        }
         return
       }
 
@@ -215,6 +227,18 @@ let moveListener = (e) => {
 
 let upListener = (e) => {
   if (dragstart) {
+    const posX = Math.abs(e.pageX - startX)
+    const posY = Math.abs(e.pageY - startY)
+
+    if (posX < 2 && posY < 2) {
+      selected = []
+
+      elems.forEach((item) => {
+        item.selected = false
+        item.elem.classList.remove('selected')
+      })
+    }
+
     $selector.style.display = "none"
     dragstart = false
     return

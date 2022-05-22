@@ -1,0 +1,42 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #222;
+    min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    height: 30px;
+    background-color: #444;
+}
+
+.main {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.selection {
+    position: absolute;
+    background-color: rgba(255, 255, 255, .3);
+    border: 1px solid #fff;
+    display: none;
+    z-index: 2;
+}
+
+.elem {
+    width: 100px;
+    height: 100px;
+    background-color: #f00;
+    margin: 20px;
+    border: 1px solid black;
+}
+
+.elem.selected {
+    background-color: #0f0;
+    z-index: 1;
+}
