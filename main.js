@@ -43,9 +43,8 @@ const downElem = (e) => {
   }
 
   if (!e.ctrlKey && !elemSelected) {
-    elems.map(item => item.selected = false)
+    elems.forEach(item => item.selected = false)
     elem.selected = true
-    selected = [...selected, elem]
   }
 
   selected = elems.filter(item => item.selected)
@@ -59,17 +58,8 @@ const downElem = (e) => {
     item.elem.classList.remove('selected')
   })
 
-  // let count = 0
-  selected.forEach((item) => {
-    const elem = item.elem
-
-  //   let coordX = (e.pageX - elemStartX) + (mainElem.offsetLeft - elem.offsetLeft) + (count * 10)
-  //   let coordY = (e.pageY - elemStartY) + (mainElem.offsetTop - elem.offsetTop) + (count * 10)
+  selected.forEach(({elem} = {...item}) => {
     elem.style.transition = TRANSITION_START
-  //   elem.style.transform = 'translateX(' + coordX + 'px)'
-  //   elem.style.transform += 'translateY(' + coordY + 'px)'
-
-  //   count++
   })
 
   if (!e.ctrlKey) {
@@ -89,6 +79,42 @@ for (let i = 0; i < 50; i++) {
 $main.ondragstart = function() {
   return false;
 };
+
+const checkIntersectSelection = (elem) => {
+  const rect1 = {
+    x: elem.offsetLeft, 
+    y: elem.offsetTop, 
+    x1: elem.offsetLeft + elem.offsetWidth, 
+    y1: elem.offsetTop + elem.offsetHeight
+  }
+
+  const rect2 = {
+    x: selLeft, 
+    y: selTop, 
+    x1: selLeft + selWidth, 
+    y1: selTop + selHeight
+  }
+
+  return intersects(rect1, rect2)
+}
+
+const checkIntersectDragElem = (elem, posX, posY) => {
+  const rect1 = {
+    x: elem.offsetLeft, 
+    y: elem.offsetTop, 
+    x1: elem.offsetLeft + elem.offsetWidth, 
+    y1: elem.offsetTop + elem.offsetHeight
+  }
+
+  const rect2 = {
+    x: posX, 
+    y: posY, 
+    x1: posX, 
+    y1: posY
+  }
+
+  return intersects(rect1, rect2)
+}
 
 function intersects( a, b ) {
     return(
@@ -166,21 +192,7 @@ let moveListener = (e) => {
     elems.forEach((item) => {
       const elem = item.elem
 
-      const rect1 = {
-        x: elem.offsetLeft, 
-        y: elem.offsetTop, 
-        x1: elem.offsetLeft + elem.offsetWidth, 
-        y1: elem.offsetTop + elem.offsetHeight
-      }
-
-      const rect2 = {
-        x: selLeft, 
-        y: selTop, 
-        x1: selLeft + selWidth, 
-        y1: selTop + selHeight
-      }
-
-      const intersect = intersects(rect1, rect2)
+      const intersect = checkIntersectSelection(elem)
 
       if (e.ctrlKey) {
         if (intersect && !item.changes) {
@@ -213,14 +225,24 @@ let moveListener = (e) => {
   if (dragElem) {
     let count = 0
     
-    selected.forEach((item) => {
-      const elem = item.elem
-
+    selected.forEach(({elem} = {...item}) => {
       let coordX = (e.pageX - elemStartX) + (mainElem.offsetLeft - elem.offsetLeft) + (count * 10)
       let coordY = (e.pageY - elemStartY) + (mainElem.offsetTop - elem.offsetTop) + (count * 10)
       elem.style.transform = 'translateX(' + coordX + 'px)'
       elem.style.transform += 'translateY(' + coordY + 'px)'
       count++
+    })
+
+    // проверка над каким элементом перетаскиваются
+    const notSelected = elems.filter(item => !item.selected)
+    notSelected.forEach(({elem} = {...item}) => {
+      const intersect = checkIntersectDragElem(elem, e.pageX, e.pageY)
+
+      if (intersect) {
+        elem.classList.add('goal')
+        return
+      }
+      elem.classList.remove('goal')
     })
   }
 }
@@ -245,40 +267,21 @@ let upListener = (e) => {
   }
 
   if (dragElem) {
-    selected.forEach(item => {
-      const elem = item.elem
+    selected.forEach(({elem} = {...item}) => {
       elem.style.transition = TRANSITION_END
       elem.style.transform = 'translateY(' + 0 + 'px)'
       elem.style.transform += 'translateX(' + 0 + 'px)'
     })
+
+    // убрать цель
+    const notSelected = elems.filter(item => !item.selected)
+    notSelected.forEach( ({elem} = {...item}) => elem.classList.remove('goal') )
 
     dragElem = false
     return
   }
 }
 
-// const clickListener = (e) => {
-//   console.log(dragstart, dragElem);
-//   if (dragstart || dragElem) {
-//     dragstart = false
-//     dragElem = false
-//     return
-//   }
-
-//   selected = []
-//   elems.map(item => item.selected = false)
-  
-//   elems.forEach((item) => {
-//     if (item.selected) {
-//       item.elem.classList.add('selected')
-//       return
-//     }
-
-//     item.elem.classList.remove('selected')
-//   })
-// }
-
 $main.addEventListener('mousedown', downListener)
 $main.addEventListener('mouseup', upListener)
 $main.addEventListener('mousemove', moveListener)
-// $main.addEventListener('click', clickListener)
